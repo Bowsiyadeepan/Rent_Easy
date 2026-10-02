@@ -39,6 +39,7 @@ fun RentEasyNavigation(
                 onNavigate = { destination ->
                     navController.navigate(destination) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
             )
@@ -49,6 +50,7 @@ fun RentEasyNavigation(
                 onNavigateToHome = { targetHome ->
                     navController.navigate(targetHome) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onNavigateToRegister = {
@@ -63,6 +65,7 @@ fun RentEasyNavigation(
                 onNavigateToHome = { targetHome ->
                     navController.navigate(targetHome) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
             )
@@ -136,7 +139,8 @@ fun RentEasyNavigation(
                 onNavigate = { route -> navController.navigate(route) { launchSingleTop = true } },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.TENANT_HOME) { inclusive = true }
+                        popUpTo(navController.graph.id) { inclusive = false }
+                        launchSingleTop = true
                     }
                 }
             )
@@ -184,7 +188,8 @@ fun RentEasyNavigation(
                 onNavigate = { route -> navController.navigate(route) { launchSingleTop = true } },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.OWNER_DASHBOARD) { inclusive = true }
+                        popUpTo(navController.graph.id) { inclusive = false }
+                        launchSingleTop = true
                     }
                 }
             )
@@ -227,7 +232,8 @@ fun RentEasyNavigation(
                 onNavigate = { route -> navController.navigate(route) { launchSingleTop = true } },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.ADMIN_DASHBOARD) { inclusive = true }
+                        popUpTo(navController.graph.id) { inclusive = false }
+                        launchSingleTop = true
                     }
                 }
             )

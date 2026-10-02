@@ -102,6 +102,10 @@ class AuthViewModel(
         _uiState.value = AuthUiState.Idle
     }
 
+    fun resetState() {
+        _uiState.value = AuthUiState.Idle
+    }
+
     fun clearError() {
         if (_uiState.value is AuthUiState.Error) {
             _uiState.value = AuthUiState.Idle

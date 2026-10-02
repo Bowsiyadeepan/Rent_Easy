@@ -20,7 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
@@ -84,9 +84,14 @@ fun RegisterScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.resetState()
+    }
+
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) {
             val user = (uiState as AuthUiState.Success).user
+            viewModel.resetState()
             when (user.role) {
                 Constants.ROLE_ADMIN -> onNavigateToHome(Routes.ADMIN_DASHBOARD)
                 Constants.ROLE_OWNER -> onNavigateToHome(Routes.OWNER_DASHBOARD)
@@ -104,7 +109,7 @@ fun RegisterScreen(
                 title = { Text("Create Account", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -144,7 +149,6 @@ fun RegisterScreen(
                     .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
                     .padding(4.dp)
             ) {
-                // Tenant Choice
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -162,7 +166,6 @@ fun RegisterScreen(
                     )
                 }
 
-                // Owner Choice
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -183,7 +186,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Error Banner
             if (errorMessage != null) {
                 ErrorBanner(
                     errorMessage = errorMessage,
@@ -192,7 +194,6 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            // Name Field
             RentEasyTextField(
                 value = name,
                 onValueChange = { name = it; viewModel.clearError() },
@@ -203,7 +204,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Email Field
             RentEasyTextField(
                 value = email,
                 onValueChange = { email = it; viewModel.clearError() },
@@ -215,7 +215,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Phone Field
             RentEasyTextField(
                 value = phone,
                 onValueChange = { phone = it; viewModel.clearError() },
@@ -227,7 +226,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Password Field
             RentEasyTextField(
                 value = password,
                 onValueChange = { password = it; viewModel.clearError() },
@@ -249,7 +247,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Confirm Password Field
             RentEasyTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it; viewModel.clearError() },
@@ -271,7 +268,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Register Button
             Button(
                 onClick = {
                     viewModel.register(
@@ -308,7 +304,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Back to sign in link
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Already have an account? ", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
                 Text(
@@ -319,7 +314,7 @@ fun RegisterScreen(
                     modifier = Modifier.clickable { onNavigateBack() }
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }

@@ -74,9 +74,14 @@ fun LoginScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.resetState()
+    }
+
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) {
             val user = (uiState as AuthUiState.Success).user
+            viewModel.resetState()
             when (user.role) {
                 Constants.ROLE_ADMIN -> onNavigateToHome(Routes.ADMIN_DASHBOARD)
                 Constants.ROLE_OWNER -> onNavigateToHome(Routes.OWNER_DASHBOARD)
