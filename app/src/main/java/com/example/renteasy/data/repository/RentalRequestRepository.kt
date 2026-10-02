@@ -22,8 +22,9 @@ class RentalRequestRepository(
     fun getTenantRequests(tenantId: String): Flow<List<RentalRequest>> {
         val firestoreFlow: Flow<List<RentalRequest>> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_RENTAL_REQUESTS)
+                    listener = firestore.collection(Constants.COLLECTION_RENTAL_REQUESTS)
                         .whereEqualTo("tenantId", tenantId)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
@@ -36,11 +37,11 @@ class RentalRequestRepository(
                             } ?: emptyList()
                             trySend(list)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getTenantRequests listener error: ${e.localizedMessage}")
                     trySend(emptyList())
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(emptyList())
@@ -55,8 +56,9 @@ class RentalRequestRepository(
     fun getOwnerRequests(ownerId: String): Flow<List<RentalRequest>> {
         val firestoreFlow: Flow<List<RentalRequest>> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_RENTAL_REQUESTS)
+                    listener = firestore.collection(Constants.COLLECTION_RENTAL_REQUESTS)
                         .whereEqualTo("ownerId", ownerId)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
@@ -69,11 +71,11 @@ class RentalRequestRepository(
                             } ?: emptyList()
                             trySend(list)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getOwnerRequests listener error: ${e.localizedMessage}")
                     trySend(emptyList())
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(emptyList())
@@ -88,8 +90,9 @@ class RentalRequestRepository(
     fun getAllRequests(): Flow<List<RentalRequest>> {
         val firestoreFlow: Flow<List<RentalRequest>> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_RENTAL_REQUESTS)
+                    listener = firestore.collection(Constants.COLLECTION_RENTAL_REQUESTS)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
                                 RentEasyLog.w(tag, "Firestore getAllRequests error: ${error.localizedMessage}")
@@ -101,11 +104,11 @@ class RentalRequestRepository(
                             } ?: emptyList()
                             trySend(list)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getAllRequests listener error: ${e.localizedMessage}")
                     trySend(emptyList())
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(emptyList())

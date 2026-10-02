@@ -20,8 +20,9 @@ class WishlistRepository(
     fun getWishlistPropertyIds(tenantId: String): Flow<Set<String>> {
         val firestoreFlow: Flow<Set<String>> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_WISHLISTS)
+                    listener = firestore.collection(Constants.COLLECTION_WISHLISTS)
                         .document(tenantId)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
@@ -33,11 +34,11 @@ class WishlistRepository(
                             val ids = (snapshot?.get("propertyIds") as? List<String>)?.toSet() ?: emptySet()
                             trySend(ids)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getWishlist listener error: ${e.localizedMessage}")
                     trySend(emptySet())
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(emptySet())

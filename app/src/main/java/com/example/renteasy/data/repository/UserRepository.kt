@@ -21,8 +21,9 @@ class UserRepository(
     fun getUser(uid: String): Flow<User?> {
         val firestoreFlow: Flow<User?> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_USERS)
+                    listener = firestore.collection(Constants.COLLECTION_USERS)
                         .document(uid)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
@@ -33,11 +34,11 @@ class UserRepository(
                             val user = snapshot?.toObject(User::class.java)?.copy(uid = snapshot.id)
                             trySend(user)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getUser listener error: ${e.localizedMessage}")
                     trySend(null)
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(null)
@@ -51,8 +52,9 @@ class UserRepository(
     fun getAllUsers(): Flow<List<User>> {
         val firestoreFlow: Flow<List<User>> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_USERS)
+                    listener = firestore.collection(Constants.COLLECTION_USERS)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
                                 RentEasyLog.w(tag, "Firestore getAllUsers error: ${error.localizedMessage}")
@@ -64,11 +66,11 @@ class UserRepository(
                             } ?: emptyList()
                             trySend(list)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getAllUsers listener error: ${e.localizedMessage}")
                     trySend(emptyList())
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(emptyList())

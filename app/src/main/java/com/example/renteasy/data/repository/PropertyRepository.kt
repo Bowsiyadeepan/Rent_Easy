@@ -22,8 +22,9 @@ class PropertyRepository(
     fun getApprovedProperties(): Flow<List<Property>> {
         val firestoreFlow: Flow<List<Property>> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_PROPERTIES)
+                    listener = firestore.collection(Constants.COLLECTION_PROPERTIES)
                         .whereEqualTo("status", Constants.STATUS_APPROVED)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
@@ -36,11 +37,11 @@ class PropertyRepository(
                             } ?: emptyList()
                             trySend(list)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getApprovedProperties listener error: ${e.localizedMessage}")
                     trySend(emptyList())
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(emptyList())
@@ -55,8 +56,9 @@ class PropertyRepository(
     fun getAllProperties(): Flow<List<Property>> {
         val firestoreFlow: Flow<List<Property>> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_PROPERTIES)
+                    listener = firestore.collection(Constants.COLLECTION_PROPERTIES)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
                                 RentEasyLog.w(tag, "Firestore getAllProperties error: ${error.localizedMessage}")
@@ -68,11 +70,11 @@ class PropertyRepository(
                             } ?: emptyList()
                             trySend(list)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getAllProperties listener error: ${e.localizedMessage}")
                     trySend(emptyList())
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(emptyList())
@@ -86,8 +88,9 @@ class PropertyRepository(
     fun getOwnerProperties(ownerId: String): Flow<List<Property>> {
         val firestoreFlow: Flow<List<Property>> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_PROPERTIES)
+                    listener = firestore.collection(Constants.COLLECTION_PROPERTIES)
                         .whereEqualTo("ownerId", ownerId)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
@@ -100,11 +103,11 @@ class PropertyRepository(
                             } ?: emptyList()
                             trySend(list)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getOwnerProperties listener error: ${e.localizedMessage}")
                     trySend(emptyList())
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(emptyList())
@@ -119,8 +122,9 @@ class PropertyRepository(
     fun getPropertyById(propertyId: String): Flow<Property?> {
         val firestoreFlow: Flow<Property?> = if (firestore != null) {
             callbackFlow {
+                var listener: com.google.firebase.firestore.ListenerRegistration? = null
                 try {
-                    val listener = firestore.collection(Constants.COLLECTION_PROPERTIES)
+                    listener = firestore.collection(Constants.COLLECTION_PROPERTIES)
                         .document(propertyId)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
@@ -131,11 +135,11 @@ class PropertyRepository(
                             val prop = snapshot?.toObject(Property::class.java)?.copy(propertyId = snapshot.id)
                             trySend(prop)
                         }
-                    awaitClose { listener.remove() }
                 } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore getPropertyById listener error: ${e.localizedMessage}")
                     trySend(null)
-                    awaitClose { }
                 }
+                awaitClose { listener?.remove() }
             }
         } else {
             flowOf(null)
