@@ -2,7 +2,6 @@ package com.example.renteasy.ui.tenant
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,21 +13,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bed
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CompareArrows
-import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.HomeWork
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -48,24 +45,27 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.renteasy.components.EmptyStateView
 import com.example.renteasy.components.PropertyCard
 import com.example.renteasy.components.RentEasyBottomBar
 import com.example.renteasy.components.RentEasySearchBar
-import com.example.renteasy.data.model.Property
 import com.example.renteasy.navigation.Routes
 import com.example.renteasy.ui.theme.CardBorder
 import com.example.renteasy.ui.theme.DeepBlue
 import com.example.renteasy.ui.theme.PrimaryBlue
+import com.example.renteasy.ui.theme.PrimaryDarkBlue
+import com.example.renteasy.ui.theme.PrimaryLightBlue
 import com.example.renteasy.ui.theme.SurfaceWhite
+import com.example.renteasy.ui.theme.TealSecondary
 import com.example.renteasy.ui.theme.TextPrimary
 import com.example.renteasy.ui.theme.TextSecondary
 import com.example.renteasy.utils.Constants
@@ -81,7 +81,6 @@ fun TenantHomeScreen(
     viewModel: TenantViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val properties by viewModel.filteredProperties.collectAsState()
-    val allApproved by viewModel.approvedProperties.collectAsState()
     val wishlistIds by viewModel.wishlistIds.collectAsState()
     val comparisonIds by viewModel.comparisonIds.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
@@ -100,26 +99,6 @@ fun TenantHomeScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Discover Homes",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                        Text(
-                            text = if (currentUser != null) "Hi, ${currentUser?.name}" else "Explore verified properties",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)
-            )
-        },
         bottomBar = {
             RentEasyBottomBar(
                 role = Constants.ROLE_TENANT,
@@ -140,7 +119,7 @@ fun TenantHomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(Icons.Default.CompareArrows, contentDescription = null)
-                        Spacer(modifier = Modifier.size(6.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Compare (${comparisonIds.size})",
                             fontWeight = FontWeight.Bold,
@@ -157,39 +136,88 @@ fun TenantHomeScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
-            // Search Bar & Filter Button
-            Column(
+            // Modern Hero Header
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(SurfaceWhite)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF1E293B), Color(0xFF0F172A))
+                        )
+                    )
+                    .padding(horizontal = 20.dp, vertical = 22.dp)
             ) {
-                RentEasySearchBar(
-                    query = searchQuery,
-                    onQueryChange = { viewModel.searchQuery.value = it },
-                    onFilterClick = { showFilterSheet = true },
-                    isFilterActive = selectedType != "All" || selectedBeds > 0 || minRent > 0 || maxRent < 100000.0
-                )
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = if (currentUser != null) "Welcome back, ${currentUser?.name?.substringBefore(" ")} 👋" else "Find Your Dream Home 🏡",
+                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Smart Decision Support with Transparent Pricing",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.75f)
+                            )
+                        }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .background(PrimaryBlue.copy(alpha = 0.25f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.HomeWork,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
 
-                // Quick Type Filter Chips
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Embedded Search Bar
+                    RentEasySearchBar(
+                        query = searchQuery,
+                        onQueryChange = { viewModel.searchQuery.value = it },
+                        onFilterClick = { showFilterSheet = true },
+                        isFilterActive = selectedType != "All" || selectedBeds > 0 || minRent > 0 || maxRent < 100000.0
+                    )
+                }
+            }
+
+            // Quick Type Filter Chips Row
+            Surface(
+                color = SurfaceWhite,
+                tonalElevation = 2.dp,
+                shadowElevation = 2.dp
+            ) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 6.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
                 ) {
                     items(Constants.PROPERTY_TYPES) { type ->
                         val isSelected = selectedType == type
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(if (isSelected) PrimaryBlue else SurfaceWhite)
+                                .background(if (isSelected) PrimaryBlue else Color(0xFFF1F5F9))
                                 .clickable { viewModel.selectedPropertyType.value = type }
-                                .padding(horizontal = 14.dp, vertical = 7.dp)
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text(
                                 text = type,
-                                color = if (isSelected) Color.White else TextSecondary,
+                                color = if (isSelected) Color.White else TextPrimary,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             )
@@ -198,7 +226,7 @@ fun TenantHomeScreen(
                 }
             }
 
-            // Property Listings count header
+            // Results Counter & Clear Filters
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -207,7 +235,7 @@ fun TenantHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${properties.size} Properties Available",
+                    text = "${properties.size} Verified Properties",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -215,10 +243,10 @@ fun TenantHomeScreen(
 
                 if (selectedType != "All" || selectedBeds > 0 || minRent > 0 || maxRent < 100000.0) {
                     Text(
-                        text = "Clear Filters",
+                        text = "Reset Filters ✕",
                         style = MaterialTheme.typography.labelMedium,
                         color = PrimaryBlue,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable {
                             viewModel.selectedPropertyType.value = "All"
                             viewModel.selectedBedrooms.value = 0
@@ -229,16 +257,16 @@ fun TenantHomeScreen(
                 }
             }
 
-            // Listings List
+            // Property Listings
             if (properties.isEmpty()) {
                 EmptyStateView(
-                    title = "No Properties Found",
-                    description = "Try clearing search keywords or changing rent/bedroom filters."
+                    title = "No Properties Match",
+                    description = "Try adjusting your price range or bedroom filters to see more results."
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 85.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(properties, key = { it.propertyId }) { prop ->
@@ -258,7 +286,7 @@ fun TenantHomeScreen(
         }
     }
 
-    // Filter Bottom Sheet
+    // Filter Modal Sheet
     if (showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
@@ -277,7 +305,7 @@ fun TenantHomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Filter Properties",
+                        text = "Filter Criteria",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -289,9 +317,9 @@ fun TenantHomeScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Rent Range Slider
+                // Rent Range
                 Text(
-                    text = "Monthly Rent Range",
+                    text = "Monthly Rent Budget",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -301,7 +329,7 @@ fun TenantHomeScreen(
                     text = "${currencyFormatter.format(minRent)} - ${currencyFormatter.format(maxRent)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PrimaryBlue,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Bold
                 )
 
                 RangeSlider(
@@ -322,7 +350,7 @@ fun TenantHomeScreen(
 
                 // Bedrooms Selector
                 Text(
-                    text = "Bedrooms",
+                    text = "Bedrooms Required",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -338,10 +366,10 @@ fun TenantHomeScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.background)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) PrimaryBlue else Color(0xFFF1F5F9))
                                 .clickable { viewModel.selectedBedrooms.value = bedCount }
-                                .padding(vertical = 10.dp),
+                                .padding(vertical = 11.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -360,10 +388,11 @@ fun TenantHomeScreen(
                     onClick = { showFilterSheet = false },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                 ) {
-                    Text("Apply Filters", fontWeight = FontWeight.Bold)
+                    Text("Show Results", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                 }
             }
         }

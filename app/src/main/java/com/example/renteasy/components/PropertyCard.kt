@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -48,12 +49,10 @@ import com.example.renteasy.ui.theme.PrimaryBlue
 import com.example.renteasy.ui.theme.ScoreHigh
 import com.example.renteasy.ui.theme.ScoreLow
 import com.example.renteasy.ui.theme.ScoreMedium
-import com.example.renteasy.ui.theme.StatusApproved
 import com.example.renteasy.ui.theme.SurfaceWhite
 import com.example.renteasy.ui.theme.TealSecondary
 import com.example.renteasy.ui.theme.TextPrimary
 import com.example.renteasy.ui.theme.TextSecondary
-import com.example.renteasy.utils.Constants
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -74,19 +73,19 @@ fun PropertyCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .shadow(elevation = 3.dp, shape = RoundedCornerShape(18.dp), clip = false)
             .clickable { onCardClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         border = CardDefaults.outlinedCardBorder().copy(brush = Brush.linearGradient(listOf(CardBorder, CardBorder)))
     ) {
         Column {
-            // Image with Overlays
+            // Hero Image Container
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
-                    .background(DeepBlue.copy(alpha = 0.05f))
+                    .height(190.dp)
+                    .background(Color(0xFFF1F5F9))
             ) {
                 val imageUrl = property.imageUrls.firstOrNull()
                 if (!imageUrl.isNullOrBlank()) {
@@ -100,30 +99,34 @@ fun PropertyCard(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Brush.verticalGradient(listOf(PrimaryBlue.copy(alpha = 0.1f), DeepBlue.copy(alpha = 0.2f)))),
+                            .background(Brush.verticalGradient(listOf(PrimaryBlue.copy(alpha = 0.12f), DeepBlue.copy(alpha = 0.25f)))),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = property.type,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge,
                             color = PrimaryBlue,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
-                // Gradient shadow overlay
+                // Smooth Vignette Gradient
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(Color.Black.copy(alpha = 0.35f), Color.Transparent, Color.Black.copy(alpha = 0.45f))
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.40f),
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.55f)
+                                )
                             )
                         )
                 )
 
-                // Top badges row: Property Type / Status & Wishlist
+                // Top Header: Type Pill & Wishlist Button
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -134,9 +137,9 @@ fun PropertyCard(
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(PrimaryBlue.copy(alpha = 0.9f))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(PrimaryBlue.copy(alpha = 0.95f))
+                                .padding(horizontal = 10.dp, vertical = 5.dp)
                         ) {
                             Text(
                                 text = property.type,
@@ -155,21 +158,21 @@ fun PropertyCard(
                         IconButton(
                             onClick = onWishlistToggle,
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.9f))
+                                .background(Color.White.copy(alpha = 0.92f))
                         ) {
                             Icon(
                                 imageVector = if (isWishlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = "Wishlist",
                                 tint = if (isWishlisted) Color(0xFFE11D48) else DeepBlue,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
                 }
 
-                // Bottom Overlay: Smart Rental Score badge if present
+                // Bottom Overlay: Smart Rental Score Pill
                 if (score != null) {
                     val scoreColor = when {
                         score >= 75 -> ScoreHigh
@@ -180,67 +183,75 @@ fun PropertyCard(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(10.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(10.dp))
                             .background(scoreColor)
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(15.dp)
                             )
-                            Spacer(modifier = Modifier.width(3.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Score: $score/100",
                                 color = Color.White,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.ExtraBold
                             )
                         }
                     }
                 }
             }
 
-            // Content Section
-            Column(modifier = Modifier.padding(14.dp)) {
-                // Rent & Deposit
+            // Body Content
+            Column(modifier = Modifier.padding(16.dp)) {
+                // Price & Security Deposit
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             text = currencyFormatter.format(property.rent),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
+                            fontWeight = FontWeight.ExtraBold,
                             color = PrimaryBlue
                         )
                         Text(
-                            text = " /mo",
+                            text = " / month",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary,
-                            modifier = Modifier.padding(bottom = 2.dp)
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 2.dp, start = 2.dp)
                         )
                     }
 
-                    Text(
-                        text = "Deposit: ${currencyFormatter.format(property.deposit)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFFF1F5F9))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = "Deposit: ${currencyFormatter.format(property.deposit)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Title
                 Text(
                     text = property.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -269,27 +280,27 @@ fun PropertyCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Features: Bedrooms, Bathrooms, Amenities count
+                // Specs: Bed, Bath, Amenities
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Bed,
                             contentDescription = "Bedrooms",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(16.dp)
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(17.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "${property.bedrooms} Beds",
+                            text = "${property.bedrooms} BHK",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextPrimary,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
@@ -297,23 +308,24 @@ fun PropertyCard(
                         Icon(
                             imageVector = Icons.Default.Bathtub,
                             contentDescription = "Bathrooms",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(15.dp)
+                            tint = TealSecondary,
+                            modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${property.bathrooms} Baths",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextPrimary,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
                     if (property.amenities.isNotEmpty()) {
                         Text(
-                            text = "• ${property.amenities.size} Amenities",
+                            text = "✨ ${property.amenities.size} Amenities",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = TextSecondary,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }

@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
@@ -29,9 +31,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,15 +45,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.renteasy.components.EmptyStateView
 import com.example.renteasy.components.PropertyCard
 import com.example.renteasy.components.RentEasyBottomBar
 import com.example.renteasy.data.model.Property
 import com.example.renteasy.navigation.Routes
 import com.example.renteasy.ui.theme.CardBorder
+import com.example.renteasy.ui.theme.DeepBlue
 import com.example.renteasy.ui.theme.PrimaryBlue
 import com.example.renteasy.ui.theme.StatusApproved
 import com.example.renteasy.ui.theme.StatusPending
@@ -85,26 +90,6 @@ fun OwnerDashboardScreen(
     val rentedCount = myProperties.count { it.status.equals(Constants.STATUS_RENTED, ignoreCase = true) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Owner Dashboard",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                        Text(
-                            text = "Welcome, ${currentUser?.name ?: "Owner"}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceWhite)
-            )
-        },
         bottomBar = {
             RentEasyBottomBar(
                 role = Constants.ROLE_OWNER,
@@ -117,7 +102,8 @@ fun OwnerDashboardScreen(
                 onClick = onNavigateToAddProperty,
                 containerColor = PrimaryBlue,
                 contentColor = Color.White,
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.shadow(8.dp, shape = RoundedCornerShape(16.dp))
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -125,7 +111,7 @@ fun OwnerDashboardScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Add Property", fontWeight = FontWeight.Bold)
+                    Text("New Listing", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -136,68 +122,130 @@ fun OwnerDashboardScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
+            // Hero Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF1E293B), Color(0xFF0F172A))
+                        )
+                    )
+                    .padding(horizontal = 20.dp, vertical = 22.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Owner Dashboard 🏢",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Manage your listings & tenant applications",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.75f)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryBlue.copy(alpha = 0.25f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Apartment, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    }
+                }
+            }
+
             // Metrics Summary
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                MetricItem(label = "Total", count = myProperties.size, color = PrimaryBlue, modifier = Modifier.weight(1f))
-                MetricItem(label = "Approved", count = approvedCount, color = StatusApproved, modifier = Modifier.weight(1f))
-                MetricItem(label = "Pending", count = pendingCount, color = StatusPending, modifier = Modifier.weight(1f))
-                MetricItem(label = "Rented", count = rentedCount, color = StatusRented, modifier = Modifier.weight(1f))
+                ModernMetricItem(label = "Total", count = myProperties.size, color = PrimaryBlue, modifier = Modifier.weight(1f))
+                ModernMetricItem(label = "Active", count = approvedCount, color = StatusApproved, modifier = Modifier.weight(1f))
+                ModernMetricItem(label = "Pending", count = pendingCount, color = StatusPending, modifier = Modifier.weight(1f))
+                ModernMetricItem(label = "Rented", count = rentedCount, color = StatusRented, modifier = Modifier.weight(1f))
             }
 
-            // Quick Banner for Pending Requests
+            // Pending Applications Banner
             if (pendingRequestsCount > 0) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = PrimaryBlue.copy(alpha = 0.1f)),
-                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(PrimaryBlue.copy(alpha = 0.3f)))
+                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(PrimaryBlue.copy(alpha = 0.35f)))
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
+                            .padding(14.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.ListAlt, contentDescription = null, tint = PrimaryBlue)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "$pendingRequestsCount Pending Tenant Requests",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryBlue
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimaryBlue.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.ListAlt, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "$pendingRequestsCount Pending Applications",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryBlue
+                                )
+                                Text(
+                                    text = "Tenants awaiting your decision",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary
+                                )
+                            }
                         }
-                        TextButton(onClick = onNavigateToRequests) {
-                            Text("Review", fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                        Button(
+                            onClick = onNavigateToRequests,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                        ) {
+                            Text("Review", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Properties List
+            // Listings List
             if (myProperties.isEmpty()) {
                 EmptyStateView(
                     icon = Icons.Default.Home,
                     title = "No Properties Listed Yet",
-                    description = "Add your first property listing to receive tenant rental applications.",
+                    description = "Publish your first property listing to begin receiving tenant applications.",
                     actionLabel = "Add Property Now",
                     onActionClick = onNavigateToAddProperty
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 85.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(myProperties, key = { it.propertyId }) { prop ->
@@ -208,23 +256,22 @@ fun OwnerDashboardScreen(
                                 onCardClick = { onNavigateToEditProperty(prop.propertyId) }
                             )
 
-                            // Owner Actions Row (Edit / Delete)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 6.dp, end = 4.dp),
+                                    .padding(top = 4.dp, end = 4.dp),
                                 horizontalArrangement = Arrangement.End
                             ) {
                                 TextButton(onClick = { onNavigateToEditProperty(prop.propertyId) }) {
                                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp), tint = PrimaryBlue)
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Edit Listing", color = PrimaryBlue)
+                                    Text("Edit Listing", color = PrimaryBlue, fontWeight = FontWeight.SemiBold)
                                 }
 
                                 TextButton(onClick = { propertyToDelete = prop }) {
                                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp), tint = StatusRejected)
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Delete", color = StatusRejected)
+                                    Text("Delete", color = StatusRejected, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         }
@@ -234,11 +281,10 @@ fun OwnerDashboardScreen(
         }
     }
 
-    // Delete Confirmation Dialog
     if (propertyToDelete != null) {
         AlertDialog(
             onDismissRequest = { propertyToDelete = null },
-            title = { Text("Delete Property Listing?") },
+            title = { Text("Delete Listing?") },
             text = { Text("Are you sure you want to delete '${propertyToDelete?.title}'? This action cannot be undone.") },
             confirmButton = {
                 Button(
@@ -261,19 +307,21 @@ fun OwnerDashboardScreen(
 }
 
 @Composable
-private fun MetricItem(label: String, count: Int, color: Color, modifier: Modifier = Modifier) {
+private fun ModernMetricItem(label: String, count: Int, color: Color, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CardBorder))
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "$count", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = color)
-            Text(text = label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Text(text = "$count", style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp), fontWeight = FontWeight.ExtraBold, color = color)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(text = label, style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Medium)
         }
     }
 }
