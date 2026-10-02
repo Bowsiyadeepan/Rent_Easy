@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -147,7 +148,10 @@ fun AdminDashboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
@@ -163,7 +167,7 @@ fun AdminDashboardScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f, fill = false)) {
                                 Text(
                                     text = "${stats.pendingApprovals} Pending Approvals",
                                     style = MaterialTheme.typography.titleMedium,
@@ -178,10 +182,13 @@ fun AdminDashboardScreen(
                             }
                         }
 
+                        Spacer(modifier = Modifier.width(10.dp))
+
                         Button(
                             onClick = { onNavigate(Routes.ADMIN_APPROVALS) },
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = if (stats.pendingApprovals > 0) StatusPending else PrimaryBlue)
+                            colors = ButtonDefaults.buttonColors(containerColor = if (stats.pendingApprovals > 0) StatusPending else PrimaryBlue),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text("Review", fontWeight = FontWeight.Bold)
                         }
