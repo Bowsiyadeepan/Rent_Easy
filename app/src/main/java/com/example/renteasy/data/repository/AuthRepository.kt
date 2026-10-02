@@ -10,8 +10,8 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class AuthRepository(
-    private val auth: FirebaseAuth = try { FirebaseAuth.getInstance() } catch (e: Exception) { FirebaseAuth.getInstance() },
-    private val firestore: FirebaseFirestore = try { FirebaseFirestore.getInstance() } catch (e: Exception) { FirebaseFirestore.getInstance() },
+    private val auth: FirebaseAuth? = try { FirebaseAuth.getInstance() } catch (e: Throwable) { null },
+    private val firestore: FirebaseFirestore? = try { FirebaseFirestore.getInstance() } catch (e: Throwable) { null },
     private val demoDataStore: DemoDataStore = DemoDataStore
 ) {
     private val tag = "AuthRepository"
@@ -32,41 +32,40 @@ class AuthRepository(
             return Result.success(demoUser)
         }
 
-        // 2. Try Firebase Auth
-        return try {
-            val authResult = auth.signInWithEmailAndPassword(trimmedEmail, trimmedPassword).await()
-            val firebaseUser = authResult.user
-            if (firebaseUser != null) {
-                // Fetch user doc from Firestore
-                val doc = firestore.collection(Constants.COLLECTION_USERS)
-                    .document(firebaseUser.uid)
-                    .get()
-                    .await()
+        // 2. Try Firebase Auth if available
+        if (auth != null && firestore != null) {
+            try {
+                val authResult = auth.signInWithEmailAndPassword(trimmedEmail, trimmedPassword).await()
+                val firebaseUser = authResult.user
+                if (firebaseUser != null) {
+                    val doc = firestore.collection(Constants.COLLECTION_USERS)
+                        .document(firebaseUser.uid)
+                        .get()
+                        .await()
 
-                val user = doc.toObject(User::class.java)?.copy(uid = firebaseUser.uid) ?: User(
-                    uid = firebaseUser.uid,
-                    name = firebaseUser.displayName ?: trimmedEmail.substringBefore("@"),
-                    email = trimmedEmail,
-                    role = Constants.ROLE_TENANT
-                )
+                    val user = doc.toObject(User::class.java)?.copy(uid = firebaseUser.uid) ?: User(
+                        uid = firebaseUser.uid,
+                        name = firebaseUser.displayName ?: trimmedEmail.substringBefore("@"),
+                        email = trimmedEmail,
+                        role = Constants.ROLE_TENANT
+                    )
 
-                demoDataStore.saveUser(user)
-                demoDataStore.setCurrentUser(user)
-                Result.success(user)
-            } else {
-                Result.failure(Exception("Authentication returned empty user"))
+                    demoDataStore.saveUser(user)
+                    demoDataStore.setCurrentUser(user)
+                    return Result.success(user)
+                }
+            } catch (e: Exception) {
+                RentEasyLog.w(tag, "Firebase login failed: ${e.localizedMessage}")
             }
-        } catch (e: Exception) {
-            RentEasyLog.w(tag, "Firebase login failed or offline: ${e.localizedMessage}")
-            
-            // Fallback: Check if user exists in DemoDataStore by email
-            val fallbackUser = demoDataStore.getUserByEmail(trimmedEmail)
-            if (fallbackUser != null) {
-                demoDataStore.setCurrentUser(fallbackUser)
-                Result.success(fallbackUser)
-            } else {
-                Result.failure(e)
-            }
+        }
+
+        // Fallback: Check if user exists in DemoDataStore by email
+        val fallbackUser = demoDataStore.getUserByEmail(trimmedEmail)
+        return if (fallbackUser != null) {
+            demoDataStore.setCurrentUser(fallbackUser)
+            Result.success(fallbackUser)
+        } else {
+            Result.failure(Exception("Invalid email or password"))
         }
     }
 
@@ -83,48 +82,49 @@ class AuthRepository(
 
         RentEasyLog.i(tag, "Registering new user: $trimmedEmail with role $role")
 
-        return try {
-            val authResult = auth.createUserWithEmailAndPassword(trimmedEmail, password).await()
-            val uid = authResult.user?.uid ?: UUID.randomUUID().toString()
-            val newUser = User(
-                uid = uid,
-                name = trimmedName,
-                email = trimmedEmail,
-                phone = trimmedPhone,
-                role = role
-            )
+        if (auth != null && firestore != null) {
+            try {
+                val authResult = auth.createUserWithEmailAndPassword(trimmedEmail, password).await()
+                val uid = authResult.user?.uid ?: UUID.randomUUID().toString()
+                val newUser = User(
+                    uid = uid,
+                    name = trimmedName,
+                    email = trimmedEmail,
+                    phone = trimmedPhone,
+                    role = role
+                )
 
-            // Save to Firestore
-            firestore.collection(Constants.COLLECTION_USERS)
-                .document(uid)
-                .set(newUser)
-                .await()
+                firestore.collection(Constants.COLLECTION_USERS)
+                    .document(uid)
+                    .set(newUser)
+                    .await()
 
-            // Save to DemoDataStore
-            demoDataStore.saveUser(newUser)
-            demoDataStore.setCurrentUser(newUser)
-            Result.success(newUser)
-        } catch (e: Exception) {
-            RentEasyLog.w(tag, "Firebase registration failed, saving locally: ${e.localizedMessage}")
-            val uid = "user_${UUID.randomUUID().toString().take(8)}"
-            val newUser = User(
-                uid = uid,
-                name = trimmedName,
-                email = trimmedEmail,
-                phone = trimmedPhone,
-                role = role
-            )
-            demoDataStore.saveUser(newUser)
-            demoDataStore.setCurrentUser(newUser)
-            Result.success(newUser)
+                demoDataStore.saveUser(newUser)
+                demoDataStore.setCurrentUser(newUser)
+                return Result.success(newUser)
+            } catch (e: Exception) {
+                RentEasyLog.w(tag, "Firebase registration failed, saving locally: ${e.localizedMessage}")
+            }
         }
+
+        val uid = "user_${UUID.randomUUID().toString().take(8)}"
+        val newUser = User(
+            uid = uid,
+            name = trimmedName,
+            email = trimmedEmail,
+            phone = trimmedPhone,
+            role = role
+        )
+        demoDataStore.saveUser(newUser)
+        demoDataStore.setCurrentUser(newUser)
+        return Result.success(newUser)
     }
 
     fun logout() {
         try {
-            auth.signOut()
+            auth?.signOut()
         } catch (e: Exception) {
-            RentEasyLog.w(tag, "Firebase signOut exception ignored: ${e.localizedMessage}")
+            RentEasyLog.w(tag, "Firebase signOut exception: ${e.localizedMessage}")
         }
         demoDataStore.setCurrentUser(null)
     }

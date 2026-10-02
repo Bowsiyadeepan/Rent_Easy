@@ -9,33 +9,38 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.tasks.await
 
 class UserRepository(
-    private val firestore: FirebaseFirestore = try { FirebaseFirestore.getInstance() } catch (e: Exception) { FirebaseFirestore.getInstance() },
+    private val firestore: FirebaseFirestore? = try { FirebaseFirestore.getInstance() } catch (e: Throwable) { null },
     private val demoDataStore: DemoDataStore = DemoDataStore
 ) {
     private val tag = "UserRepository"
 
     fun getUser(uid: String): Flow<User?> {
-        val firestoreFlow: Flow<User?> = callbackFlow {
-            try {
-                val listener = firestore.collection(Constants.COLLECTION_USERS)
-                    .document(uid)
-                    .addSnapshotListener { snapshot, error ->
-                        if (error != null) {
-                            RentEasyLog.w(tag, "Firestore getUser error: ${error.localizedMessage}")
-                            trySend(null)
-                            return@addSnapshotListener
+        val firestoreFlow: Flow<User?> = if (firestore != null) {
+            callbackFlow {
+                try {
+                    val listener = firestore.collection(Constants.COLLECTION_USERS)
+                        .document(uid)
+                        .addSnapshotListener { snapshot, error ->
+                            if (error != null) {
+                                RentEasyLog.w(tag, "Firestore getUser error: ${error.localizedMessage}")
+                                trySend(null)
+                                return@addSnapshotListener
+                            }
+                            val user = snapshot?.toObject(User::class.java)?.copy(uid = snapshot.id)
+                            trySend(user)
                         }
-                        val user = snapshot?.toObject(User::class.java)?.copy(uid = snapshot.id)
-                        trySend(user)
-                    }
-                awaitClose { listener.remove() }
-            } catch (e: Exception) {
-                trySend(null)
-                awaitClose { }
+                    awaitClose { listener.remove() }
+                } catch (e: Exception) {
+                    trySend(null)
+                    awaitClose { }
+                }
             }
+        } else {
+            flowOf(null)
         }
 
         return combine(firestoreFlow, demoDataStore.users) { firestoreUser, demoUsers ->
@@ -44,25 +49,29 @@ class UserRepository(
     }
 
     fun getAllUsers(): Flow<List<User>> {
-        val firestoreFlow: Flow<List<User>> = callbackFlow {
-            try {
-                val listener = firestore.collection(Constants.COLLECTION_USERS)
-                    .addSnapshotListener { snapshot, error ->
-                        if (error != null) {
-                            RentEasyLog.w(tag, "Firestore getAllUsers error: ${error.localizedMessage}")
-                            trySend(emptyList())
-                            return@addSnapshotListener
+        val firestoreFlow: Flow<List<User>> = if (firestore != null) {
+            callbackFlow {
+                try {
+                    val listener = firestore.collection(Constants.COLLECTION_USERS)
+                        .addSnapshotListener { snapshot, error ->
+                            if (error != null) {
+                                RentEasyLog.w(tag, "Firestore getAllUsers error: ${error.localizedMessage}")
+                                trySend(emptyList())
+                                return@addSnapshotListener
+                            }
+                            val list = snapshot?.documents?.mapNotNull { doc ->
+                                doc.toObject(User::class.java)?.copy(uid = doc.id)
+                            } ?: emptyList()
+                            trySend(list)
                         }
-                        val list = snapshot?.documents?.mapNotNull { doc ->
-                            doc.toObject(User::class.java)?.copy(uid = doc.id)
-                        } ?: emptyList()
-                        trySend(list)
-                    }
-                awaitClose { listener.remove() }
-            } catch (e: Exception) {
-                trySend(emptyList())
-                awaitClose { }
+                    awaitClose { listener.remove() }
+                } catch (e: Exception) {
+                    trySend(emptyList())
+                    awaitClose { }
+                }
             }
+        } else {
+            flowOf(emptyList())
         }
 
         return combine(firestoreFlow, demoDataStore.users) { firestoreList, demoList ->
@@ -73,13 +82,15 @@ class UserRepository(
     suspend fun updateUser(user: User): Result<Unit> {
         return try {
             demoDataStore.saveUser(user)
-            try {
-                firestore.collection(Constants.COLLECTION_USERS)
-                    .document(user.uid)
-                    .set(user)
-                    .await()
-            } catch (e: Exception) {
-                RentEasyLog.w(tag, "Firestore updateUser failed, kept in demo: ${e.localizedMessage}")
+            if (firestore != null) {
+                try {
+                    firestore.collection(Constants.COLLECTION_USERS)
+                        .document(user.uid)
+                        .set(user)
+                        .await()
+                } catch (e: Exception) {
+                    RentEasyLog.w(tag, "Firestore updateUser failed: ${e.localizedMessage}")
+                }
             }
             Result.success(Unit)
         } catch (e: Exception) {

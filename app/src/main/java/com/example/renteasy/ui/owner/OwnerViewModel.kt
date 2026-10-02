@@ -35,14 +35,13 @@ class OwnerViewModel(
     private val rentalRequestRepository: RentalRequestRepository = RentalRequestRepository(),
     private val authRepository: AuthRepository = AuthRepository(),
     private val userRepository: UserRepository = UserRepository(),
-    private val storage: FirebaseStorage = try { FirebaseStorage.getInstance() } catch (e: Exception) { FirebaseStorage.getInstance() }
+    private val storage: FirebaseStorage? = try { FirebaseStorage.getInstance() } catch (e: Throwable) { null }
 ) : ViewModel() {
 
     private val tag = "OwnerViewModel"
 
     val currentUser: StateFlow<User?> = authRepository.currentUser
 
-    // Owner's properties
     val myProperties: StateFlow<List<Property>> = combine(
         currentUser,
         propertyRepository.getAllProperties()
@@ -51,7 +50,6 @@ class OwnerViewModel(
         allProps.filter { it.ownerId == uid }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Received requests for owner's properties
     val receivedRequests: StateFlow<List<RentalRequest>> = combine(
         currentUser,
         rentalRequestRepository.getAllRequests()
@@ -97,23 +95,25 @@ class OwnerViewModel(
         viewModelScope.launch {
             _formState.value = PropertyFormState.Loading
             try {
-                // Upload images if any, fallback to local uri strings in demo mode
                 val uploadedUrls = mutableListOf<String>()
                 uploadedUrls.addAll(existingImageUrls)
 
                 for (uri in selectedImageUris) {
-                    try {
-                        val ref = storage.reference.child("properties/${UUID.randomUUID()}.jpg")
-                        ref.putFile(uri).await()
-                        val downloadUrl = ref.downloadUrl.await().toString()
-                        uploadedUrls.add(downloadUrl)
-                    } catch (e: Exception) {
-                        RentEasyLog.w(tag, "Firebase image upload failed/offline, using uri directly: ${e.localizedMessage}")
+                    if (storage != null) {
+                        try {
+                            val ref = storage.reference.child("properties/${UUID.randomUUID()}.jpg")
+                            ref.putFile(uri).await()
+                            val downloadUrl = ref.downloadUrl.await().toString()
+                            uploadedUrls.add(downloadUrl)
+                        } catch (e: Exception) {
+                            RentEasyLog.w(tag, "Firebase image upload fallback: ${e.localizedMessage}")
+                            uploadedUrls.add(uri.toString())
+                        }
+                    } else {
                         uploadedUrls.add(uri.toString())
                     }
                 }
 
-                // If no images provided, supply a high-quality default
                 if (uploadedUrls.isEmpty()) {
                     uploadedUrls.add("https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80")
                 }
@@ -130,7 +130,7 @@ class OwnerViewModel(
                     bathrooms = bathrooms,
                     description = description.trim(),
                     type = type,
-                    status = Constants.STATUS_PENDING, // New/edited properties go to PENDING for admin review
+                    status = Constants.STATUS_PENDING,
                     imageUrls = uploadedUrls,
                     amenities = amenities,
                     estimatedUtilityCost = estimatedUtilityCost,

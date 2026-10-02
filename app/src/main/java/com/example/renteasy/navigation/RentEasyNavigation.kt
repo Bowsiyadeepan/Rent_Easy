@@ -136,7 +136,7 @@ fun RentEasyNavigation(
                 onNavigate = { route -> navController.navigate(route) { launchSingleTop = true } },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(Routes.TENANT_HOME) { inclusive = true }
                     }
                 }
             )
@@ -184,7 +184,7 @@ fun RentEasyNavigation(
                 onNavigate = { route -> navController.navigate(route) { launchSingleTop = true } },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(Routes.OWNER_DASHBOARD) { inclusive = true }
                     }
                 }
             )
@@ -227,7 +227,7 @@ fun RentEasyNavigation(
                 onNavigate = { route -> navController.navigate(route) { launchSingleTop = true } },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(Routes.ADMIN_DASHBOARD) { inclusive = true }
                     }
                 }
             )
